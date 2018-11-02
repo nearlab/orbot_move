@@ -7,26 +7,38 @@ Assume rollers are pointing away from the bot.
 Reference: http://research.ijcaonline.org/volume113/number3/pxc3901586.pdf
 */
 #include "orbot_utils.h"
-#include <stdint.h>
 
 Orbot::Orbot(){
-	float wheel_locs[2][4];
-	for(uint8_t i=0;i<4;i++){
-		wheel_locs[0][i]=((i&2)>0?-length/2:length/2)-x_cm;//hardcoding is for dummies
-		wheel_locs[1][i]=(((i&2)>>1)^(i&1)>0?-width/2:width/2)-y_cm;
-	}
+}
+Orbot::Orbot(float x_cm, float y_cm, float length, float width, float radius){
+	this->x_cm = x_cm;
+	this->y_cm = y_cm;
+	this->length = length;
+	this->width = width;
+	this->radius = radius;
+	wheel_locs[0][0] = length/2;
+	wheel_locs[1][0] = -width/2;
+	wheel_locs[0][1] = length/2;
+	wheel_locs[1][1] = width/2;
+	wheel_locs[0][2] = -length/2;
+	wheel_locs[1][2] = width/2;
+	wheel_locs[0][3] = -length/2;
+	wheel_locs[1][3] = -width/2;
 }
 void Orbot::getRotationRates(float* rates, float vx,float vy, float vTheta){
-	
-
-	for(uint8_t i=0;i<4;i++){
-		float a=atan2(wheel_locs[1][i],wheel_locs[0][i]);//about pi/4 or -pi/4
-		float b=(((i&2)>>1)^(i&1))>0?-pi/2:pi/2;
-		float c=i&1>0?-pi/4:pi/4;
+	for(int i=0;i<4;i++){
 		float l=sqrt(wheel_locs[0][i]*wheel_locs[0][i]+wheel_locs[1][i]*wheel_locs[1][i]);
-		rates[i]=vx/radius*cos(b-c)/sin(c);
-		rates[i]-=vy/radius*sin(b-c)/sin(c);
-		rates[i]-=vTheta/radius*l*sin(b-c+a)/sin(c);
+		rates[i] = vx/radius;
+		if(i == 0 || i == 2){
+			rates[i] -= vy/radius;
+		}else{
+			rates[i] += vy/radius;
+		}
+		if(i == 0 || i == 3){
+			rates[i] -= vTheta/radius/l;
+		}else{
+			rates[i] += vTheta/radius/l;
+		}
 	}
-
 }
+
